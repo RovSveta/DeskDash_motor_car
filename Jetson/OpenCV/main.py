@@ -3,9 +3,13 @@ import numpy as np
 import pandas as pd
 import os
 
+
 # Open USB camera:
 #camera = cv2.VideoCapture(0)
-camera = cv2.VideoCapture("VID_20250401_122228.mp4")
+#camera = cv2.VideoCapture("VID_20250401_122228.mp4")
+camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/VID_20250401_122228.mp4")
+
+
 
 if not camera.isOpened():
     print("Failed to open video.")
@@ -49,7 +53,7 @@ def compute_center_line_and_distances(mask_red, mask_blue, frame, y_focus_area):
         center_x = (avg_red + avg_blue) // 2
         
         # this is a car position, middle of x axe
-        width = frame.shape[:2]
+        height, width = frame.shape[:2]
         car_position_x = width // 2
         cv2.line(frame, (center_x, 0), (center_x, frame.shape[0]), (0, 255, 255), 2)
     
@@ -65,7 +69,7 @@ def compute_center_line_and_distances(mask_red, mask_blue, frame, y_focus_area):
 def draw_dots_from_mask(mask, frame, color=(0, 255, 0), y_focus_area = 0):
     red_blue_edges, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for edge in red_blue_edges:
-        if cv2.contourArea(edge) > 100:  #100 - ignore noise
+        if cv2.contourArea(edge) > 100:  #100 - ignore noise, possible to try 50 or 30 and see what will happen
             for point in edge:
                 x, y = point[0]
                 if y >= y_focus_area:
@@ -101,14 +105,14 @@ def process_frame(frame):
         print(f"Distance to Red: {dist_left}, Distance to Blue: {dist_right}, Center X: {center_x}")
     
         if abs(dist_left - dist_right) < 10:
-            return 'Forward'
+            return 'F'
         elif dist_left > dist_right:
             return 'L'  # Closer to blue → steer left
             
         else:
             return 'R'  # Closer to red → steer right
     else:
-        return 'No lines'      # No lines found
+        return 'F'      # No lines found but we will send Forward command
 
 # MAIN LOOP IS HERE -->>>
 
