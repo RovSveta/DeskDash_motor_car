@@ -6,9 +6,7 @@ import os
 
 # Open USB camera:
 #camera = cv2.VideoCapture(0)
-#camera = cv2.VideoCapture("VID_20250401_122228.mp4")
-camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/VID_20250401_122228.mp4")
-
+camera = cv2.VideoCapture("VID_20250401_122228.mp4")
 
 
 if not camera.isOpened():
@@ -26,13 +24,17 @@ red_upper2 = np.array([179, 255, 255])
 blue_lower = np.array([85, 40, 40])
 blue_upper = np.array([135, 255, 255])
 
+# this function detects red and blue lines contours, calculates lanes center, calculates average x-positions
+# and calculates how far the car (assumed to be in the center of the frame) is from each line:
 def compute_center_line_and_distances(mask_red, mask_blue, frame, y_focus_area):
     red_x = []
     blue_x = []
 
+    # find red and blue contours:
     red_line_edges, _ = cv2.findContours(mask_red, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     blue_line_edges, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+    
+    # Loop through contours and collect x-values for red lane:
     for edge in red_line_edges:
         if cv2.contourArea(edge) > 100:
             for point in edge:
@@ -40,6 +42,7 @@ def compute_center_line_and_distances(mask_red, mask_blue, frame, y_focus_area):
                 if y >= y_focus_area:
                     red_x.append(x)
 
+    # Loop through contours and collect x-values for red lane:
     for edge in blue_line_edges:
         if cv2.contourArea(edge) > 100:
             for point in edge:
@@ -48,13 +51,18 @@ def compute_center_line_and_distances(mask_red, mask_blue, frame, y_focus_area):
                     blue_x.append(x)
 
     if red_x and blue_x:
+        # These represent the average horizontal position of each lane line:
         avg_red = int(np.mean(red_x))
         avg_blue = int(np.mean(blue_x))
+
+        # middle between red and blue → the desired driving path:
         center_x = (avg_red + avg_blue) // 2
         
-        # this is a car position, middle of x axe
+        # this is a car position (assumed position), center of the screen
         height, width = frame.shape[:2]
         car_position_x = width // 2
+
+        # draw a sentre line:
         cv2.line(frame, (center_x, 0), (center_x, frame.shape[0]), (0, 255, 255), 2)
     
         dist_left = car_position_x - avg_red
@@ -125,8 +133,7 @@ while True:
     
     command = process_frame(frame)
     
-    # show the command text on the video
-    
+    # show the command text on the video:    
     cv2.putText(
     frame,                      
     f"Command: {command}",      
