@@ -2,11 +2,18 @@ import cv2
 import numpy as np
 import pandas as pd
 import os
+import torch
+
+import ultralytics
+ultralytics.checks()
+from ultralytics import YOLO
 
 
 # Open USB camera:
 #camera = cv2.VideoCapture(0)
-camera = cv2.VideoCapture("VID_20250401_122228.mp4")
+#camera = cv2.VideoCapture("VID_20250401_122228.mp4")
+camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/VID_20250401_122228.mp4")
+
 
 
 if not camera.isOpened():
@@ -121,6 +128,10 @@ def process_frame(frame):
             return 'R'  # Closer to red → steer right
     else:
         return 'F'      # No lines found but we will send Forward command
+    
+
+# Yolo5 object detection function:
+
 
 # MAIN LOOP IS HERE -->>>
 
@@ -132,6 +143,9 @@ while True:
         break
     
     command = process_frame(frame)
+
+    # Run YOLOv5 detection on the same frame
+    #detections, frame, summary_text = detect_objects_with_yolo(frame)
     
     # show the command text on the video:    
     cv2.putText(
@@ -143,8 +157,7 @@ while True:
     (0, 255, 255),              # Text color (yellow)
     3,                          # Thickness
     cv2.LINE_AA                # Line type
-)
-
+    )
 
     # Show processed result
     cv2.imshow("Line Detection", frame)
@@ -154,4 +167,4 @@ while True:
         break
 
 camera.release()
-cv2.destroyAllWindows()
+cv2.destroyAllWindows()  
