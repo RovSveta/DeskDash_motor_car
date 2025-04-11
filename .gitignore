@@ -1,1 +1,2 @@
-OpenCV/VID_20250401_122228.mp4
+# OR ignore all mp4 files in that folder
+Jetson/OpenCV/*.mp4
