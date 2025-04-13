@@ -4,15 +4,15 @@ import pandas as pd
 import os
 import torch
 
-#import ultralytics
-#ultralytics.checks()
-#from ultralytics import YOLO
+import pathlib
+temp = pathlib.PosixPath
+pathlib.PosixPath = pathlib.WindowsPath
 
 
 # Open USB camera:
 #camera = cv2.VideoCapture(0)
 #camera = cv2.VideoCapture("VID_20250401_122228.mp4")
-camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/VID_20250401_122228.mp4")
+camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/object_detect.mp4")
 
 
 
@@ -131,7 +131,30 @@ def process_frame(frame):
     
 
 # Yolo5 object detection function:
+# Load the model (it will load the model once):
+model = torch.hub.load('ultralytics/yolov5', # main model
+                       'custom', # custom model
+                       path='best.pt', # out model
+                       skip_validation=True) # no checking
 
+print(model)
+
+def detect_objects_with_yolo(model, frame):
+    results = model(frame)
+    results.render()  # automatically draws boxes on frame
+
+    detections = results.pandas().xyxy[0]
+    print(detections)
+    labels_found = []
+
+    for _, obj in detections.iterrows():
+        label = obj['name']
+        conf = obj['confidence']
+        labels_found.append(f"{label} ({conf:.0%})")
+
+        
+    detect_object_text = "Detected: " + ", ".join(labels_found) if labels_found else "No objects"
+    return detect_object_text
 
 # MAIN LOOP IS HERE -->>>
 
@@ -145,7 +168,8 @@ while True:
     command = process_frame(frame)
 
     # Run YOLOv5 detection on the same frame
-    #detections, frame, summary_text = detect_objects_with_yolo(frame)
+    detect_object_text = detect_objects_with_yolo(model, frame)
+
     
     # show the command text on the video:    
     cv2.putText(
