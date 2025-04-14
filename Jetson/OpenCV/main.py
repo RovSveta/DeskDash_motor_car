@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import torch
 
+# this is needed to avoid PosixPath error on Windows:
 import pathlib
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath

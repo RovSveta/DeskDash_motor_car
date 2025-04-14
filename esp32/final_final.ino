@@ -41,29 +41,33 @@ void loop() {
     Serial.println(command);
 
     switch (command) {
-      case 'f': // Move Forward
+      case 'F': // Move Forward
         Serial.println("Moving Forward");
         moveForward();
         break;
 
-      case 'b': // Move Backward
+      case 'B': // Move Backward
         Serial.println("Moving Backward");
         moveBackward();
         break;
 
-      case 'r': // Turn Left
+      case 'L': // Turn Left
         Serial.println("Turning Left");
         turnLeft();
+        delay(500); // Wait 2 seconds
+        stopMotors(); // Stop after turning
+        moveForward();
         break;
 
-      case 'l': // Turn Right (Auto-stop after 2 sec)
+      case 'R': // Turn Right (Auto-stop after 2 sec)
         Serial.println("Turning Right for 2 sec...");
         turnRight();
-        delay(2000); // Wait 2 seconds
+        delay(500); // Wait 2 seconds
         stopMotors(); // Stop after turning
+        moveForward();
         break;
 
-      case 's': // Stop both motors
+      case 'S': // Stop both motors
         Serial.println("Stopping");
         stopMotors();
         break;
