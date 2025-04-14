@@ -12,7 +12,7 @@ pathlib.PosixPath = pathlib.WindowsPath
 # Open USB camera:
 #camera = cv2.VideoCapture(0)
 #camera = cv2.VideoCapture("VID_20250401_122228.mp4")
-camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/object_detect.mp4")
+camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/Object_detection.mp4")
 
 
 
@@ -90,7 +90,7 @@ def draw_dots_from_mask(mask, frame, color=(0, 255, 0), y_focus_area = 0):
                 if y >= y_focus_area:
                     cv2.circle(frame, (x, y), 2, color, -1)
 
-
+# this function will call 2 above functions
 def process_frame(frame):
     # 1. Convert to HSV:
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -137,14 +137,14 @@ model = torch.hub.load('ultralytics/yolov5', # main model
                        path='best.pt', # out model
                        skip_validation=True) # no checking
 
-print(model)
+# print(model)
 
 def detect_objects_with_yolo(model, frame):
     results = model(frame)
     results.render()  # automatically draws boxes on frame
 
     detections = results.pandas().xyxy[0]
-    print(detections)
+    #print(detections) -->> it will print this : Columns: [xmin, ymin, xmax, ymax, confidence, class, name]
     labels_found = []
 
     for _, obj in detections.iterrows():
@@ -155,6 +155,48 @@ def detect_objects_with_yolo(model, frame):
         
     detect_object_text = "Detected: " + ", ".join(labels_found) if labels_found else "No objects"
     return detect_object_text
+
+# weather condition function:
+def load_weather(): 
+    from joblib import load
+    import urllib.request, json
+  
+
+    # load the model that was said in the training code
+    model = load("weathercontrolmodel.joblib")
+
+    # copy the labels from the training code
+    # make sure the order is identical!
+    labels = ["Ice", "Normal", "Rain", "Snow"]
+
+    data = None
+
+    # download the current weather data from API
+    with urllib.request.urlopen("https://edu.frostbit.fi/api/road_weather/2025/") as url:
+        data = json.load(url)
+
+
+    weather = ""   
+    # if data was successfully downloaded, make a prediction with our model
+    if data != None:
+        
+        # let's use this in the model, prediction
+        tester_row = pd.DataFrame([data])
+
+        result = labels[model.predict(tester_row)[0]]    
+
+        # this can be implemented as you wish in your own car system
+        # "decision logic" based on the model's prediction
+        if result == "Normal":
+            weather = "Weather: Normal"
+        elif result == "Rain":
+            weather = "Weather: Rainy"
+        elif result == "Snow":
+            weather = "Weather: Snowy"
+        elif result == "Ice":
+            weather = "Weather: Icy"
+        
+    return weather
 
 # MAIN LOOP IS HERE -->>>
 
@@ -181,6 +223,15 @@ while True:
     (0, 255, 255),              # Text color (yellow)
     3,                          # Thickness
     cv2.LINE_AA                # Line type
+    )
+
+    # Run weather prediction function:
+    weather_text = load_weather()
+
+    # show weather on video:
+    cv2.putText(
+        frame, weather_text, (30, 100),
+        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA
     )
 
     # Show processed result
