@@ -1,10 +1,21 @@
+# needed installations:
+# pip install opencv-python
+# pip install numpy
+# pip install pandas
+# pip install torch torchvision torchaudio - PyTorch + TorchVision – for YOLOv5 model inference
+# pip install matplotlib seaborn tqdm - YOLOv5 dependencies via ultralytics repo (used with torch.hub.load)
+# git clone https://github.com/ultralytics/yolov5 - this is needed to run Yolov5
+# cd yolov5
+# pip3 install -r requirements.txt
+# pip install joblib - Joblib – for loading the weather prediction model:
+
 import cv2
 import numpy as np
 import pandas as pd
 import os
 import torch
 
-# this is needed to avoid PosixPath error on Windows:
+# this is needed to avoid PosixPath error on Windows, in Linux this is not needed:
 import pathlib
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
