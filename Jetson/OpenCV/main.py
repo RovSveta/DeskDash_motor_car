@@ -7,7 +7,9 @@
 # git clone https://github.com/ultralytics/yolov5 - this is needed to run Yolov5
 # cd yolov5
 # pip3 install -r requirements.txt
-# pip install joblib - Joblib – for loading the weather prediction model:
+# pip install joblib - Joblib – for loading the weather prediction model
+from sklearn.preprocessing import LabelEncoder  # for line detection to tranform command to numerical format
+from sklearn.preprocessing import OneHotEncoder # for objest detection model
 
 import cv2
 import numpy as np
@@ -26,11 +28,14 @@ pathlib.PosixPath = pathlib.WindowsPath
 #camera = cv2.VideoCapture("VID_20250401_122228.mp4")
 camera = cv2.VideoCapture("C:/Storage/Studies/Lapland_AMK/4_semester/Robotics_project/DeskDash_motor_car/Jetson/OpenCV/Object_detection.mp4")
 
-
-
 if not camera.isOpened():
     print("Failed to open video.")
     exit()
+
+# -------Encoder for line detection model---------
+commands = ['F', 'L', 'R', 'B']
+encoder = LabelEncoder()
+encoder.fit(commands) # this actually transform commands ['F', 'L', 'R', 'B'] -> ["1","2","3","4"]
 
 # Adjusted HSV Ranges for detecting red and blue lane lines
 # Red
@@ -146,10 +151,19 @@ def process_frame(frame):
 # Load the model (it will load the model once):
 model = torch.hub.load('ultralytics/yolov5', # main model
                        'custom', # custom model
-                       path='best.pt', # out model
+                       path='Jetson/OpenCV/best.pt', # out model
                        skip_validation=True) # no checking
 
-# print(model)
+# ----- Object detection encoder--------
+
+# Extract class names( ['bear', 'fox', 'moose', 'santa']) from the model:
+class_labels = list(model.names.values())
+
+# Setup OneHotEncoder using those labels
+object_encoder = OneHotEncoder(sparse_output=False, categories=[class_labels])
+
+# this line needed to call fit() to avoid NotFittedError:
+object_encoder.fit([[label] for label in class_labels])
 
 def detect_objects_with_yolo(model, frame):
     results = model(frame)
@@ -157,16 +171,21 @@ def detect_objects_with_yolo(model, frame):
 
     detections = results.pandas().xyxy[0]
     #print(detections) -->> it will print this : Columns: [xmin, ymin, xmax, ymax, confidence, class, name]
-    labels_found = []
+    encoded_labels = []
 
     for _, obj in detections.iterrows():
         label = obj['name']
         conf = obj['confidence']
-        labels_found.append(f"{label} ({conf:.0%})")
+        try:
+            vector = object_encoder.transform([[label]])[0]  # Note: use transform (not fit_transform)
+            encoded_labels.append(f"{label} ({conf:.0%})")
+            print(f"{label} → {vector}")
+        except Exception as e:
+            print(f"Skipping label {label}:{e}")
 
         
-    detect_object_text = "Detected: " + ", ".join(labels_found) if labels_found else "No objects"
-    return detect_object_text
+    detect_object_text = "Detected: " + ", ".join(encoded_labels) if encoded_labels else "No objects"
+    return detect_object_text, vector
 
 # weather condition function:
 def load_weather(): 
@@ -175,7 +194,7 @@ def load_weather():
   
 
     # load the model that was said in the training code
-    model = load("weathercontrolmodel.joblib")
+    model = load("Jetson/OpenCV/weathercontrolmodel.joblib")
 
     # copy the labels from the training code
     # make sure the order is identical!
@@ -221,8 +240,14 @@ while True:
     
     command = process_frame(frame)
 
+    
+    # Encode command ['F', 'L', 'R', 'B'] to a number, saved in a variable:
+    encoded_command = encoder.transform([command])[0]
+    # for debugging purpose we print it:
+    print(f"Command: {command} -> Encoded: {encoded_command}")
+
     # Run YOLOv5 detection on the same frame
-    detect_object_text = detect_objects_with_yolo(model, frame)
+    detect_object_text, vector= detect_objects_with_yolo(model, frame)
 
     
     # show the command text on the video:    
