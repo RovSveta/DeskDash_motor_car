@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Robot Car Control</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    button { font-size: 24px; padding: 20px; margin: 10px; width: 100px; }
+  </style>
+</head>
+<body>
+  <h1>📷 Autonomous Car Camera Stream</h1>
+  <img src="/video" width="640" height="480">
+  <div>
+    <button onclick="sendCommand('f')">F</button><br>
+    <button onclick="sendCommand('l')">L</button>
+    <button onclick="sendCommand('s')">S</button>
+    <button onclick="sendCommand('r')">R</button><br>
+    <button onclick="sendCommand('b')">B</button>
+  </div>
+
+  <script>
+    function sendCommand(cmd) {
+      fetch('/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command: cmd })
+      }).then(res => console.log("Sent:", cmd));
+    }
+
+    // Optional: key press support
+    document.addEventListener('keydown', function(e) {
+      const keyMap = {
+        'f': 'f',
+        'b': 'b',
+        'l': 'l',
+        'r': 'r',
+        's': 's'
+      };
+      const cmd = keyMap[e.key.toLowerCase()];
+      if (cmd) sendCommand(cmd);
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
