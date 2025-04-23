@@ -160,6 +160,11 @@ model = torch.hub.load('ultralytics/yolov5', # main model
 class_labels = list(model.names.values())
 
 # Setup OneHotEncoder using those labels
+# Encoded lables return following binary values:
+# santa → [          0           0           0           1],
+# moose → [          0           0           1           0],
+# fox → [          0           1           0           0],
+# bear → [          1           0           0           0]
 object_encoder = OneHotEncoder(sparse_output=False, categories=[class_labels])
 
 # this line needed to call fit() to avoid NotFittedError:
@@ -185,7 +190,7 @@ def detect_objects_with_yolo(model, frame):
 
         
     detect_object_text = "Detected: " + ", ".join(encoded_labels) if encoded_labels else "No objects"
-    return detect_object_text, vector
+    return detect_object_text, encoded_labels
 
 # weather condition function:
 def load_weather(): 
@@ -247,7 +252,7 @@ while True:
     print(f"Command: {command} -> Encoded: {encoded_command}")
 
     # Run YOLOv5 detection on the same frame
-    detect_object_text, vector= detect_objects_with_yolo(model, frame)
+    detect_object_text, encoded_labels = detect_objects_with_yolo(model, frame)
 
     
     # show the command text on the video:    
@@ -271,12 +276,15 @@ while True:
         cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA
     )
 
-    # Show processed result
-    cv2.imshow("Line Detection", frame)
+    # We are not displaying visual outputs. Instead, 
+    # we process and use binary results from both line detection and object detection for decision-making.
+    # (Show processed result)
+    #cv2.imshow("Line Detection", frame)
 
-    # Exit on 'q'
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-camera.release()
-cv2.destroyAllWindows()  
+    # Not displaying visual outputs:
+    # (Exit on 'q')
+    #if cv2.waitKey(1) & 0xFF == ord('q'):
+    #   break
+# Not displaying visual outputs:
+#camera.release()
+#cv2.destroyAllWindows()  
