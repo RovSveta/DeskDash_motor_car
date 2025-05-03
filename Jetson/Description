@@ -1,1 +1,3 @@
-
+Line Detection & Object Detection
+This module uses a camera to perform real-time line detection and object detection. The system processes the video feed and correctly identifies lines and objects as expected. However, at this stage, it does not communicate with the ESP32 or control the robot's motors. 
+Integration with the motor controller is planned for future development to enable autonomous navigation.
